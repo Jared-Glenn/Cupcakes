@@ -4,6 +4,7 @@ from flask import Flask, request, redirect, render_template, jsonify
 from flask_debugtoolbar import DebugToolbarExtension
 from models import db, connect_db, Cupcake
 from datetime import datetime
+from forms import CupcakeForm
 
 app = Flask(__name__)
 
@@ -19,6 +20,29 @@ app.app_context().push()
 db.create_all()
 
 
+# Main cupcake page.
+
+@app.route('/')
+def home():
+    """Home page, listing cupcakes and allowing cupcakes to be added."""
+    
+    form = CupcakeForm()
+    
+    if form.validate_on_submit():
+        flavor = form.flavor.data
+        size = form.size.data
+        rating = form.rating.data
+        image = form.image.data
+        
+        new_cupcake = Cupcake(flavor=flavor, size=size, rating=rating, image=image)
+        db.session.add(new_cupcake)
+        db.session.commit()
+        
+    return render_template("home.html", form=form)
+
+
+# Show all cupcakes.
+
 @app.route('/api/cupcakes', methods=["GET"])
 def all_cupcakes():
     """Give all the cupcakes on the site."""
@@ -28,6 +52,8 @@ def all_cupcakes():
     return jsonify(cupcakes=all_cupcakes)
 
 
+# Show one cupcake.
+
 @app.route('/api/cupcakes/<cupcake_id>', methods=["GET"])
 def get_cupcake(cupcake_id):
     """Get the identified cupcake."""
@@ -36,6 +62,8 @@ def get_cupcake(cupcake_id):
     
     return jsonify(cupcake=cupcake)
 
+
+# Add a cupcake.
 
 @app.route('/api/cupcakes', methods=["POST"])
 def create_cupcake():
@@ -49,6 +77,9 @@ def create_cupcake():
     response_json = jsonify(cupcake=new_cupcake.serialize())
     return (response_json, 201)
 
+
+# Edit a cupcake.
+
 @app.route('/api/cupcakes/<cupcake_id>', methods=["PATCH"])
 def update_cupcake(cupcake_id):
     """Update the specified cupcake."""
@@ -60,6 +91,9 @@ def update_cupcake(cupcake_id):
     cupcake.image = request.json.get('image', cupcake.image)
     db.session.commit()
     return jsonify(cupcake=cupcake.serialize())
+
+
+# Delete a cupcake.
 
 @app.route('/api/cupcakes/<cupcake_id>', methods=["DELETE"])
 def delete_cupcake(cupcake_id):
