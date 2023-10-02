@@ -1,21 +1,40 @@
-async function createCupcake() {
-    const flavor = $("#flavor");
-    const size = $("#size");
-    const rating = $("#rating");
-    const image = $("#image");
-
-    // START HERE - I'm having trouble getting the data into a json format that the api link can read.
-    // At the moment, I'm getting an error as if it thinks it is converting from a dict (as in, from Python.)
-
-    await axios.post('/api/cupcakes', {
-        "flavor": flavor,
-        "size": size,
-        "rating": rating,
-        "image": image})
+async function fillList() {
     
-    $(".cupcake-list").append('<li>'+ flavor + size + rating + image + '</li>')
-    console.log("That worked!")
+    console.log("Ready!")
+    const cupcakeList = await axios.get('/api/cupcakes');
+
+    console.log(cupcakeList)
+
+    for (let i = 0; i < (cupcakeList.data.cupcakes).length; i++) {
+        let cupcake = cupcakeList.data.cupcakes[i]
+        console.log("go!")
+        $(".cupcake-list").append('<li>'+ cupcake.flavor + '</li>')
+    }
 }
 
 
-$("#new-cupcake").click(createCupcake)
+
+async function createCupcake() {
+    const flavor = $("#flavor").val();
+    const size = $("#size").val();
+    const rating = $("#rating").val();
+    const image = $("#image").val();
+
+
+    await axios.post('/api/cupcakes', {
+        flavor: flavor,
+        size: size,
+        rating: parseFloat(rating),
+        image: image
+    })
+    
+    $(".cupcake-list").append('<li>'+ flavor + '</li>')
+}
+
+
+$( document ).ready(function() {
+    fillList();
+});
+
+$( document ).ready(fillList);
+$("#new-cupcake").click(createCupcake);
